@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>charade212</title>
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      background: #ffffff; /* Clean white */
+      overflow: hidden;
+      font-family: Arial, sans-serif;
+      color: black;
+    }
+
+    canvas {
+      display: block;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+    }
+
+    #logo {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      cursor: pointer;
+      z-index: 2;
+    }
+
+    #shop {
+      opacity: 0;
+      pointer-events: none;
+      max-width: 600px;
+      margin: 100px auto;
+      padding: 20px;
+      position: relative;
+      z-index: 3;
+    }
+
+    .product {
+      margin-bottom: 40px;
+      text-align: center;
+    }
+
+    .product img {
+      width: 300px;
+      height: auto;
+    }
+
+    button {
+      background: black;
+      color: white;
+      border: none;
+      padding: 10px 30px;
+      font-family: Arial, sans-serif;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+      margin-top: 15px;
+    }
+
+    button:hover {
+      background: #555;
+    }
+  </style>
+</head>
+
+<body>
+  <audio id="warpSound" src="/sounds/warp.mp3"></audio>
+
+  <canvas id="stars"></canvas>
+  <img id="logo" src="/images/logo.png" alt="Logo" width="120">
+
+  <div id="shop">
+    <div class="product">
+      <img src="/products/cha-cha-trucker.jpg" alt="Cha Cha Trucker Hat">
+      <h2>Cha Cha Trucker Hat</h2>
+      <p>$20</p>
+      <a href="https://buy.stripe.com/9AQ01n7hP7wZgmsfYY" target="_blank">
+        <button>Buy Now</button>
+      </a>
+    </div>
+  </div>
+
+<script>
+// Star tunnel effect
+const canvas = document.getElementById('stars');
+const ctx = canvas.getContext('2d');
+let stars = [];
+let w, h;
+
+function resizeCanvas() {
+  w = canvas.width = window.innerWidth;
+  h = canvas.height = window.innerHeight;
+}
+
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+
+function createStars(count) {
+  stars = [];
+  for (let i = 0; i < count; i++) {
+    stars.push({
+      x: Math.random() * w - w/2,
+      y: Math.random() * h - h/2,
+      z: Math.random() * w
+    });
+  }
+}
+
+function drawStars() {
+  ctx.fillStyle = 'black';
+  ctx.fillRect(0, 0, w, h);
+  ctx.fillStyle = 'white';
+  stars.forEach(star => {
+    let k = 128.0 / star.z;
+    let x = star.x * k + w/2;
+    let y = star.y * k + h/2;
+    if (x >= 0 && x <= w && y >= 0 && y <= h) {
+      let size = (1 - star.z / w) * 2;
+      ctx.beginPath();
+      ctx.arc(x, y, size, 0, 2 * Math.PI);
+      ctx.fill();
+    }
+  });
+}
+
+function moveStars() {
+  stars.forEach(star => {
+    star.z -= 3;
+    if (star.z <= 0) {
+      star.z = w;
+    }
+  });
+}
+
+function animate() {
+  drawStars();
+  moveStars();
+  requestAnimationFrame(animate);
+}
+
+createStars(400);
+animate();
+
+// Logo click triggers shop
+const logo = document.getElementById('logo');
+const shop = document.getElementById('shop');
+const warpSound = document.getElementById('warpSound');
+
+logo.addEventListener('click', () => {
+  warpSound.play();
+  logo.style.display = 'none';
+  setTimeout(() => {
+    shop.style.opacity = 1;
+    shop.style.pointerEvents = 'auto';
+    canvas.style.display = 'none';
+  }, 3000);
+});
+</script>
+
+</body>
+</html>
