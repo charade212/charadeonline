@@ -239,7 +239,7 @@
     <!-- AIM Instant Messenger Pop-up Box -->
     <div id="aim-modal">
       <div class="aim-header" id="aim-drag-handle">
-        <span>Instant Message with: Charade212</span>
+        <span>Instant Message with: Cha Cha</span>
         <div class="error-close" onclick="closeAIM()">X</div>
       </div>
       <div class="aim-body">
@@ -287,10 +287,9 @@
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0eGx4dnpvZW5weWticmR3eWZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc2MzAxNzAsImV4cCI6MjEwMzIwNjE3MH0.WxNdRg0W78RYQU0_I4p50I6OFvHEUc1gnSihZao4w6s";
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // Track loaded messages locally to stop duplicates
     const loadedMsgIds = new Set();
 
-    // Realtime Listener for Incoming Admin Messages (Discord -> Supabase)
+    // Listen live for incoming replies sent from Discord -> Supabase
     supabaseClient
       .channel('aim-chat-channel')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, payload => {
@@ -304,7 +303,7 @@
         if (newMsg.is_admin) {
           const msgDiv = document.createElement('div');
           msgDiv.className = 'aim-chat-msg';
-          msgDiv.innerHTML = `<span class="sender">${newMsg.sender || 'Charade212'}:</span> ${newMsg.content}`;
+          msgDiv.innerHTML = `<span class="sender">Cha Cha:</span> ${newMsg.content}`;
           chatLog.appendChild(msgDiv);
           chatLog.scrollTop = chatLog.scrollHeight;
 
@@ -313,7 +312,9 @@
       })
       .subscribe();
 
-    // Boot Sequence & Dialog Controls
+    // -----------------------------------------------------------------
+    // Boot Sequence & UI Handlers
+    // -----------------------------------------------------------------
     function startBootSequence(username) {
       document.getElementById('user-screen').style.display = 'none';
       document.getElementById('boot-screen').style.display = 'flex';
@@ -334,11 +335,14 @@
       document.getElementById('error-modal').style.display = 'none';
     }
 
-    // Clean History Load (Sorted ascending by id/created_at)
+    // Fetch past messages cleanly into the chat log div ONLY
     async function loadHistory() {
       const chatLog = document.getElementById('aim-chat-log');
+      const inputArea = document.getElementById('aim-msg-input');
       
-      chatLog.innerHTML = `<div class="aim-chat-msg"><span class="sender">Charade212:</span> Welcome! Drop a message below to send it live to my Discord.</div>`;
+      chatLog.innerHTML = `<div class="aim-chat-msg"><span class="sender">Cha Cha:</span> Welcome! Drop a message below to send it live to my Discord.</div>`;
+      
+      if (inputArea) inputArea.value = '';
       loadedMsgIds.clear();
 
       const { data, error } = await supabaseClient
@@ -348,7 +352,7 @@
         .limit(50);
 
       if (error) {
-        console.error("Error loading chat history:", error.message);
+        console.error("Supabase load history error:", error.message);
         return;
       }
 
@@ -357,8 +361,9 @@
           if (msg.id) loadedMsgIds.add(msg.id);
           const msgDiv = document.createElement('div');
           msgDiv.className = 'aim-chat-msg';
+          
           if (msg.is_admin) {
-            msgDiv.innerHTML = `<span class="sender">${msg.sender || 'Charade212'}:</span> ${msg.content}`;
+            msgDiv.innerHTML = `<span class="sender">Cha Cha:</span> ${msg.content}`;
           } else {
             msgDiv.innerHTML = `<span class="me">${msg.sender || 'Guest'}:</span> ${msg.content}`;
           }
@@ -377,7 +382,9 @@
       document.getElementById('aim-modal').style.display = 'none';
     }
 
-    // Send AIM Message
+    // -----------------------------------------------------------------
+    // AIM Message Sender
+    // -----------------------------------------------------------------
     async function sendAIMMessage() {
       const input = document.getElementById('aim-msg-input');
       const chatLog = document.getElementById('aim-chat-log');
@@ -405,10 +412,12 @@
         loadedMsgIds.add(data[0].id);
       }
 
-      if (error) console.error("Supabase insert error:", error.message);
+      if (error) {
+        console.error("Failed to send message to Supabase:", error.message);
+      }
     }
 
-    // Keydown Listener
+    // Keypress listener: Enter sends message, Shift+Enter creates line break
     document.addEventListener("DOMContentLoaded", () => {
       const inputArea = document.getElementById('aim-msg-input');
       if (inputArea) {
@@ -421,7 +430,9 @@
       }
     });
 
-    // Window Dragging Logic
+    // -----------------------------------------------------------------
+    // Drag Functionality (Mouse & Touch)
+    // -----------------------------------------------------------------
     const aimModal = document.getElementById("aim-modal");
     const aimHeader = document.getElementById("aim-drag-handle");
     let isDragging = false, offsetX = 0, offsetY = 0;
@@ -430,6 +441,7 @@
       isDragging = true;
       const clientX = e.touches ? e.touches[0].clientX : e.clientX;
       const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      
       aimModal.style.transform = 'none';
       offsetX = clientX - aimModal.offsetLeft;
       offsetY = clientY - aimModal.offsetTop;
@@ -439,6 +451,7 @@
       if (!isDragging) return;
       const clientX = e.touches ? e.touches[0].clientX : e.clientX;
       const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
       aimModal.style.left = `${clientX - offsetX}px`;
       aimModal.style.top = `${clientY - offsetY}px`;
     }
