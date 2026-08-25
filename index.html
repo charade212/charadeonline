@@ -4,11 +4,18 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Charade XP</title>
+
+  <!-- Favicons and Web Manifest -->
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="manifest" href="/site.webmanifest">
+
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body, html { width: 100%; height: 100%; font-family: "Tahoma", sans-serif; overflow: hidden; user-select: none; }
 
-    /* Phase 1: Picka User Landing Screen */
+    /* Phase 1: Windows XP Pick-a-User Landing Screen */
     #user-screen {
       position: absolute;
       width: 100%; height: 100%;
@@ -83,7 +90,7 @@
     .desktop-icon {
       display: flex; flex-direction: column; align-items: center; text-decoration: none; color: white; text-shadow: 1px 1px 3px #000; font-size: 12px; cursor: pointer; text-align: center;
     }
-    .desktop-icon img { width: 38px; height: 38px; margin-bottom: 4px; }
+    .desktop-icon img { width: 44px; height: 44px; margin-bottom: 4px; object-fit: contain; }
 
     /* XP Error Dialog Styling */
     #error-modal {
@@ -122,7 +129,7 @@
       </div>
       <div class="welcome-right">
         <div class="user-card" onclick="startBootSequence('Charade')">
-          <img src="WindowsDucky.jpeg" alt="User Duck Icon" class="user-avatar" />
+          <img src="WindowsDucky.png" alt="User Duck Icon" class="user-avatar" />
           <span class="user-name">Charade</span>
         </div>
         <div class="user-card" onclick="startBootSequence('Guest')">
@@ -149,12 +156,15 @@
   <!-- 3. Desktop Environment -->
   <div id="desktop">
     <div class="icon-grid">
-      <a href="https://charade212.online" class="desktop-icon">
-        <img src="assets/folder-icon.png" alt="Folder" onerror="this.src='WindowsDucky.png'" />
-        <span>Main Site</span>
+      <!-- Retail Shop Link -->
+      <a href="https://charade212.com/" class="desktop-icon" target="_blank">
+        <img src="Your paragraph text.png" alt="Charade Shop" />
+        <span>Charade Shop</span>
       </a>
+
+      <!-- System Error Trigger -->
       <div class="desktop-icon" onclick="triggerError()">
-        <img src="assets/warning-icon.png" alt="System Error" onerror="this.src='WindowsDucky.png'" />
+        <img src="WindowsDucky.png" alt="System Error" />
         <span>System Error</span>
       </div>
     </div>
@@ -187,10 +197,8 @@
       userScreen.style.display = 'none';
       bootScreen.style.display = 'flex';
 
-      // Play XP startup sound on interaction
       startupAudio.play().catch(e => console.log("Audio playback blocked:", e));
 
-      // Transition to Bliss desktop after loading
       setTimeout(() => {
         bootScreen.style.display = 'none';
         desktop.style.display = 'block';
