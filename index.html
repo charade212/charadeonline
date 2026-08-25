@@ -286,7 +286,6 @@
     // Supabase Configuration
     // -----------------------------------------------------------------
     const SUPABASE_URL = "https://rtxlxvzoenpykbrdwyfo.supabase.co";
-    // Replace with your public 'anon' key from API settings (NOT service_role key)
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0eGx4dnpvZW5weWticmR3eWZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc2MzAxNzAsImV4cCI6MjEwMzIwNjE3MH0.WxNdRg0W78RYQU0_I4p50I6OFvHEUc1gnSihZao4w6s";
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -344,8 +343,44 @@
       document.getElementById('error-modal').style.display = 'none';
     }
 
+    // Load recent message history from Supabase
+    async function loadHistory() {
+      const chatLog = document.getElementById('aim-chat-log');
+      try {
+        const { data, error } = await supabaseClient
+          .from('messages')
+          .select('*')
+          .order('created_at', { ascending: true })
+          .limit(50);
+
+        if (error) {
+          console.error("Error loading chat history:", error.message);
+          return;
+        }
+
+        if (data && data.length > 0) {
+          // Clear current log and re-add default greeting + past messages
+          chatLog.innerHTML = `<div class="aim-chat-msg"><span class="sender">Cha Cha:</span> Welcome! Drop a message below to send it live to me.</div>`;
+          data.forEach(msg => {
+            const msgDiv = document.createElement('div');
+            msgDiv.className = 'aim-chat-msg';
+            if (msg.is_admin) {
+              msgDiv.innerHTML = `<span class="sender">${msg.sender}:</span> ${msg.content}`;
+            } else {
+              msgDiv.innerHTML = `<span class="me">${msg.sender || 'Guest'}:</span> ${msg.content}`;
+            }
+            chatLog.appendChild(msgDiv);
+          });
+          chatLog.scrollTop = chatLog.scrollHeight;
+        }
+      } catch (err) {
+        console.error("Failed to load chat history:", err);
+      }
+    }
+
     function openAIM() {
       document.getElementById('aim-modal').style.display = 'block';
+      loadHistory();
     }
 
     function closeAIM() {
@@ -385,6 +420,14 @@
         console.error("Failed to send message to Supabase:", err);
       }
     }
+
+    // Enter key listener to trigger sendAIMMessage()
+    document.getElementById('aim-msg-input').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendAIMMessage();
+      }
+    });
 
     // -----------------------------------------------------------------
     // Drag Functionality (Mouse & Touch)
