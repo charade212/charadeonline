@@ -231,7 +231,7 @@
 
       <!-- System Error Trigger -->
       <div class="desktop-icon" onclick="triggerError()">
-        <img src="WindowsDucky.png" alt="System Error" />
+        <img src="WindowsDucky.jpg" alt="System Error" />
         <span>System Error</span>
       </div>
     </div>
@@ -285,32 +285,40 @@
     // -----------------------------------------------------------------
     const SUPABASE_URL = "https://rtxlxvzoenpykbrdwyfo.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0eGx4dnpvZW5weWticmR3eWZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc2MzAxNzAsImV4cCI6MjEwMzIwNjE3MH0.WxNdRg0W78RYQU0_I4p50I6OFvHEUc1gnSihZao4w6s";
-    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
+    
+    let supabaseClient;
     const loadedMsgIds = new Set();
 
-    // Listen live for incoming replies sent from Discord -> Supabase
-    supabaseClient
-      .channel('aim-chat-channel')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, payload => {
-        const chatLog = document.getElementById('aim-chat-log');
-        const receiveSound = document.getElementById('aim-receive-sound');
-        const newMsg = payload.new;
+    function initSupabase() {
+      if (window.supabase && typeof window.supabase.createClient === 'function') {
+        supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        // Listen live for incoming replies sent from Discord -> Supabase
+        supabaseClient
+          .channel('aim-chat-channel')
+          .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, payload => {
+            const chatLog = document.getElementById('aim-chat-log');
+            const receiveSound = document.getElementById('aim-receive-sound');
+            const newMsg = payload.new;
 
-        if (newMsg.id && loadedMsgIds.has(newMsg.id)) return;
-        if (newMsg.id) loadedMsgIds.add(newMsg.id);
+            if (newMsg.id && loadedMsgIds.has(newMsg.id)) return;
+            if (newMsg.id) loadedMsgIds.add(newMsg.id);
 
-        if (newMsg.is_admin) {
-          const msgDiv = document.createElement('div');
-          msgDiv.className = 'aim-chat-msg';
-          msgDiv.innerHTML = `<span class="sender">Cha Cha:</span> ${newMsg.content}`;
-          chatLog.appendChild(msgDiv);
-          chatLog.scrollTop = chatLog.scrollHeight;
+            if (newMsg.is_admin) {
+              const msgDiv = document.createElement('div');
+              msgDiv.className = 'aim-chat-msg';
+              msgDiv.innerHTML = `<span class="sender">Cha Cha:</span> ${newMsg.content}`;
+              chatLog.appendChild(msgDiv);
+              chatLog.scrollTop = chatLog.scrollHeight;
 
-          receiveSound.play().catch(e => console.log("Audio playback blocked:", e));
-        }
-      })
-      .subscribe();
+              receiveSound.play().catch(e => console.log("Audio playback blocked:", e));
+            }
+          })
+          .subscribe();
+      } else {
+        setTimeout(initSupabase, 50);
+      }
+    }
 
     // -----------------------------------------------------------------
     // Boot Sequence & UI Handlers
@@ -344,6 +352,8 @@
       
       if (inputArea) inputArea.value = '';
       loadedMsgIds.clear();
+
+      if (!supabaseClient) return;
 
       const { data, error } = await supabaseClient
         .from('messages')
@@ -391,7 +401,7 @@
       const sendSound = document.getElementById('aim-send-sound');
       const text = input.value.trim();
 
-      if (!text) return;
+      if (!text || !supabaseClient) return;
 
       sendSound.play().catch(e => console.log("Audio playback blocked:", e));
 
@@ -417,8 +427,10 @@
       }
     }
 
-    // Keypress listener: Enter sends message, Shift+Enter creates line break
+    // Keypress listener & initialization on load
     document.addEventListener("DOMContentLoaded", () => {
+      initSupabase();
+
       const inputArea = document.getElementById('aim-msg-input');
       if (inputArea) {
         inputArea.addEventListener('keydown', (e) => {
