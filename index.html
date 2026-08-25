@@ -289,21 +289,6 @@
     let supabaseClient;
     const loadedMsgIds = new Set();
 
-    // Safe helper to play audio without letting missing or blocked sound files halt JavaScript execution
-    function safePlaySound(audioId) {
-      try {
-        const sound = document.getElementById(audioId);
-        if (sound) {
-          const promise = sound.play();
-          if (promise !== undefined) {
-            promise.catch(e => console.log(`Audio (${audioId}) skipped:`, e.message));
-          }
-        }
-      } catch (e) {
-        console.log(`Audio playback error ignored:`, e.message);
-      }
-    }
-
     function initSupabase() {
       if (window.supabase && typeof window.supabase.createClient === 'function') {
         supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -325,7 +310,7 @@
               chatLog.appendChild(msgDiv);
               chatLog.scrollTop = chatLog.scrollHeight;
 
-              safePlaySound('aim-receive-sound');
+              document.getElementById('aim-receive-sound').play();
             }
           })
           .subscribe();
@@ -340,7 +325,7 @@
     function startBootSequence(username) {
       document.getElementById('user-screen').style.display = 'none';
       document.getElementById('boot-screen').style.display = 'flex';
-      safePlaySound('xp-startup');
+      document.getElementById('xp-startup').play();
 
       setTimeout(() => {
         document.getElementById('boot-screen').style.display = 'none';
@@ -349,7 +334,7 @@
     }
 
     function triggerError() {
-      safePlaySound('xp-error-sound');
+      document.getElementById('xp-error-sound').play();
       document.getElementById('error-modal').style.display = 'block';
     }
 
@@ -376,6 +361,7 @@
         .limit(50);
 
       if (error) {
+        alert("Supabase Read Error: " + error.message);
         console.error("Supabase load history error:", error.message);
         return;
       }
@@ -407,16 +393,23 @@
     }
 
     // -----------------------------------------------------------------
-    // AIM Message Sender
+    // AIM Message Sender (with direct alert diagnostics)
     // -----------------------------------------------------------------
     async function sendAIMMessage() {
       const input = document.getElementById('aim-msg-input');
       const chatLog = document.getElementById('aim-chat-log');
       const text = input.value.trim();
 
-      if (!text || !supabaseClient) return;
+      if (!text) {
+        alert("Input is empty!");
+        return;
+      }
+      if (!supabaseClient) {
+        alert("Supabase connection is not ready yet!");
+        return;
+      }
 
-      safePlaySound('aim-send-sound');
+      document.getElementById('aim-send-sound').play();
 
       const msgDiv = document.createElement('div');
       msgDiv.className = 'aim-chat-msg';
@@ -431,12 +424,11 @@
         .insert([{ sender: 'Guest', content: text, is_admin: false }])
         .select();
 
-      if (data && data[0] && data[0].id) {
-        loadedMsgIds.add(data[0].id);
-      }
-
       if (error) {
-        console.error("Failed to send message to Supabase:", error.message);
+        alert("Supabase Error: " + error.message + " | Code: " + error.code);
+        console.error("Insert error:", error);
+      } else if (data && data[0] && data[0].id) {
+        loadedMsgIds.add(data[0].id);
       }
     }
 
