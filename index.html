@@ -273,10 +273,10 @@
     </div>
   </div>
 
-  <!-- Audio Triggers (Local Sound FX Files) -->
-  <audio id="xp-startup" src="windows-xp-startup.mp3" preload="auto"></audio>
-  <audio id="xp-error-sound" src="windows-xp-error.mp3" preload="auto"></audio>
-  <audio id="aim-send-sound" src="aim-send.mp3" preload="auto"></audio>
+  <!-- Audio Sources Linked -->
+  <audio id="xp-startup" src="https://ia801509.us.archive.org/28/items/window-xp-startup/Windows%20XP%20Startup.mp3" preload="auto"></audio>
+  <audio id="xp-error-sound" src="https://ia800300.us.archive.org/16/items/WindowsXPErrorSoundEffect/Windows%20XP%20Error.mp3" preload="auto"></audio>
+  <audio id="aim-send-sound" src="IM-alert.mp3" preload="auto"></audio>
   <audio id="aim-receive-sound" src="IM-alert.mp3" preload="auto"></audio>
   <audio id="aim-exit-sound" src="exit-aim.mp3" preload="auto"></audio>
 
@@ -321,7 +321,6 @@
               chatLog.appendChild(msgDiv);
               chatLog.scrollTop = chatLog.scrollHeight;
 
-              // Plays local IM-alert.mp3 sound
               playAudioSafe('aim-receive-sound');
             }
           })
@@ -401,7 +400,6 @@
     }
 
     function closeAIM() {
-      // Plays local exit-aim.mp3 door close sound on close
       playAudioSafe('aim-exit-sound');
       document.getElementById('aim-modal').style.display = 'none';
     }
