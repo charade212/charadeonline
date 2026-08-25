@@ -1,186 +1,456 @@
-<script>
-  // -----------------------------------------------------------------
-  // Supabase Configuration
-  // -----------------------------------------------------------------
-  const SUPABASE_URL = "https://rtxlxvzoenpykbrdwyfo.supabase.co";
-  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0eGx4dnpvZW5weWticmR3eWZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc2MzAxNzAsImV4cCI6MjEwMzIwNjE3MH0.WxNdRg0W78RYQU0_I4p50I6OFvHEUc1gnSihZao4w6s";
-  const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Charade XP</title>
 
-  // Listen live for incoming replies sent from Discord -> Supabase
-  supabaseClient
-    .channel('aim-chat-channel')
-    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, payload => {
+  <!-- Favicons and Web Manifest -->
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="manifest" href="/site.webmanifest">
+
+  <!-- Supabase JS Library -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body, html { width: 100%; height: 100%; font-family: "Tahoma", sans-serif; overflow: hidden; user-select: none; }
+
+    /* Phase 1: Windows XP Pick-a-User Landing Screen */
+    #user-screen {
+      position: absolute;
+      width: 100%; height: 100%;
+      background: linear-gradient(to bottom, #001275 0%, #2055d5 20%, #2055d5 80%, #001275 100%);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      z-index: 10;
+      overflow-y: auto;
+    }
+    .welcome-top, .welcome-bottom {
+      height: 70px; background-color: #001248; width: 100%; display: flex; align-items: center; padding: 0 40px; flex-shrink: 0;
+    }
+    .welcome-top { border-bottom: 2px solid #e58700; justify-content: flex-end; }
+    .welcome-bottom { border-top: 2px solid #e58700; justify-content: space-between; color: white; font-size: 13px; }
+    .welcome-center {
+      display: flex; width: 100%; height: calc(100% - 140px); align-items: center; flex-grow: 1;
+    }
+    .welcome-left {
+      width: 45%; display: flex; flex-direction: column; align-items: flex-end; padding-right: 40px; border-right: 1px solid rgba(255,255,255,0.3);
+    }
+    .welcome-right {
+      width: 55%; padding-left: 40px; display: flex; flex-direction: column; gap: 15px;
+    }
+    .charade-flag-logo { width: 140px; margin-bottom: 10px; }
+    .brand-heading { color: white; font-size: 32px; font-weight: bold; font-family: "Trebuchet MS", sans-serif; text-shadow: 1px 1px 4px #000; }
+    .instruction-text { color: #ffffff; opacity: 0.8; font-size: 14px; margin-top: 8px; }
+
+    .user-card-link { text-decoration: none; display: block; width: fit-content; }
+    .user-card {
+      display: flex; align-items: center; gap: 15px; cursor: pointer; padding: 8px; border-radius: 6px; width: 260px; transition: background 0.2s;
+    }
+    .user-card:hover { background: rgba(255, 255, 255, 0.15); }
+    .user-avatar {
+      width: 54px; height: 54px; border: 2px solid #fff; border-radius: 4px; box-shadow: 2px 2px 4px rgba(0,0,0,0.5); object-fit: cover;
+    }
+    .user-name { color: white; font-size: 18px; font-weight: bold; text-shadow: 1px 1px 2px #000; }
+
+    /* Phase 2: Windows Loading Screen */
+    #boot-screen {
+      position: absolute;
+      width: 100%; height: 100%;
+      background: #000000;
+      color: #ffffff;
+      display: none;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      z-index: 9;
+    }
+    .loading-bar {
+      width: 160px; height: 12px; border: 2px solid #5a5a5a; border-radius: 3px; overflow: hidden; margin-top: 20px; background: #000;
+    }
+    .loading-block {
+      width: 30%; height: 100%; background: linear-gradient(to right, #2860eb, #6ba1ff); animation: loading 1.4s infinite linear;
+    }
+    @keyframes loading {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(350%); }
+    }
+
+    /* Phase 3: Desktop Environment */
+    #desktop {
+      position: absolute;
+      width: 100%; height: 100%;
+      background: url('WindowsClassic.jpeg') no-repeat center center fixed;
+      background-size: cover;
+      display: none;
+      z-index: 1;
+    }
+    .icon-grid {
+      display: flex; flex-direction: column; gap: 20px; padding: 20px; width: 100px;
+    }
+    .desktop-icon {
+      display: flex; flex-direction: column; align-items: center; text-decoration: none; color: white; text-shadow: 1px 1px 3px #000; font-size: 12px; cursor: pointer; text-align: center;
+    }
+    .desktop-icon img { width: 44px; height: 44px; margin-bottom: 4px; object-fit: contain; }
+
+    /* XP Error Dialog Styling */
+    #error-modal {
+      display: none;
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 360px;
+      max-width: 90vw;
+      background: #ece9d8;
+      border: 3px solid #0055ea;
+      border-radius: 8px 8px 0 0;
+      box-shadow: 4px 4px 12px rgba(0,0,0,0.5);
+      z-index: 100;
+    }
+    .error-header {
+      background: linear-gradient(to right, #0058ee, #3a93ff); color: white; font-weight: bold; padding: 4px 8px; font-size: 13px; display: flex; justify-content: space-between; align-items: center; border-radius: 4px 4px 0 0;
+    }
+    .error-close { background: #d84a38; border: 1px solid #fff; color: white; width: 16px; height: 16px; font-size: 10px; line-height: 12px; text-align: center; cursor: pointer; font-weight: bold; }
+    .error-body { padding: 15px; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+    .error-cascade-img { width: 100%; max-width: 220px; height: auto; }
+    .error-msg { font-size: 12px; color: #000; text-align: center; }
+    .error-btn { background: #ece9d8; border: 1px solid #7f9db9; padding: 4px 20px; font-size: 12px; cursor: pointer; box-shadow: inset 1px 1px 0 #fff; }
+    .error-btn:active { background: #e0ded0; }
+
+    /* Retro AIM Window Styling */
+    #aim-modal {
+      display: none;
+      position: absolute;
+      top: 15%; left: 50%;
+      transform: translateX(-50%);
+      width: 380px;
+      max-width: 92vw;
+      background: #ece9d8;
+      border: 3px solid #0055ea;
+      border-radius: 8px 8px 0 0;
+      box-shadow: 4px 4px 14px rgba(0,0,0,0.6);
+      z-index: 101;
+    }
+    .aim-header {
+      background: linear-gradient(to right, #0058ee, #3a93ff); color: white; font-weight: bold; padding: 6px 8px; font-size: 12px; display: flex; justify-content: space-between; align-items: center; border-radius: 4px 4px 0 0; cursor: move; touch-action: none;
+    }
+    .aim-body { padding: 8px; display: flex; flex-direction: column; gap: 8px; background: #ece9d8; }
+    .aim-chat-log {
+      height: 180px; background: #fff; border: 2px inset #7f9db9; padding: 8px; overflow-y: auto; font-size: 12px; font-family: "Comic Sans MS", "Tahoma", sans-serif; color: #000;
+    }
+    .aim-chat-msg { margin-bottom: 6px; }
+    .aim-chat-msg .sender { font-weight: bold; color: #0000ff; }
+    .aim-chat-msg .me { font-weight: bold; color: #ff0000; }
+    .aim-toolbar { display: flex; gap: 4px; font-size: 11px; background: #dedad0; padding: 2px; border: 1px solid #b5b2a5; overflow-x: auto; }
+    .aim-toolbar button { font-size: 10px; padding: 2px 6px; background: #ece9d8; border: 1px solid #7f9db9; cursor: pointer; flex-shrink: 0; }
+    .aim-input-area { display: flex; gap: 6px; height: 50px; }
+    .aim-input { flex: 1; border: 2px inset #7f9db9; padding: 4px; font-size: 12px; font-family: "Tahoma", sans-serif; resize: none; outline: none; }
+    .aim-send-btn { width: 60px; background: #ece9d8; border: 2px solid #7f9db9; font-size: 12px; font-weight: bold; cursor: pointer; box-shadow: inset 1px 1px 0 #fff; }
+    .aim-send-btn:active { background: #d0cebe; }
+
+    /* Media Queries for Mobile Responsiveness */
+    @media (max-width: 650px) {
+      .welcome-center { flex-direction: column; height: auto; padding: 20px 0; justify-content: center; }
+      .welcome-left { width: 100%; border-right: none; border-bottom: 1px solid rgba(255,255,255,0.3); padding-right: 0; padding-bottom: 20px; align-items: center; text-align: center; }
+      .welcome-right { width: 100%; padding-left: 0; padding-top: 20px; align-items: center; }
+      .welcome-top, .welcome-bottom { padding: 0 15px; font-size: 11px; }
+      .user-card { width: 100%; max-width: 280px; }
+      #aim-modal { top: 10%; }
+      .aim-chat-log { height: 150px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 1. Pick a User Screen (Landing) -->
+  <div id="user-screen">
+    <div class="welcome-top"></div>
+    <div class="welcome-center">
+      <div class="welcome-left">
+        <img src="charadeflag.gif" alt="Charade Flag" class="charade-flag-logo" />
+        <div class="brand-heading">Charade XP</div>
+        <div class="instruction-text">To begin, click your user name</div>
+      </div>
+      <div class="welcome-right">
+        <!-- Main Charade User -->
+        <div class="user-card" onclick="startBootSequence('Charade')">
+          <img src="WindowsDucky.jpg" alt="User Duck Icon" class="user-avatar" />
+          <span class="user-name">Charade</span>
+        </div>
+
+        <!-- Amber Diaz User -->
+        <a href="https://amberdiaz.com/" class="user-card-link" target="_blank">
+          <div class="user-card">
+            <img src="lilolme2.png" alt="Amber Diaz Icon" class="user-avatar" />
+            <span class="user-name">Amber Diaz</span>
+          </div>
+        </a>
+
+        <!-- Amber Skyy User -->
+        <a href="https://amberskyy.online/" class="user-card-link" target="_blank">
+          <div class="user-card">
+            <img src="lilolme1.png" alt="Amber Skyy Icon" class="user-avatar" />
+            <span class="user-name">Amber Skyy</span>
+          </div>
+        </a>
+      </div>
+    </div>
+    <div class="welcome-bottom">
+      <div>Turn off computer</div>
+      <div>Charade 212 Interactive Portal</div>
+    </div>
+  </div>
+
+  <!-- 2. Booting / Loading Screen -->
+  <div id="boot-screen">
+    <img src="charadeflag.gif" alt="Charade Flag" style="width: 100px; margin-bottom: 15px;" />
+    <div class="brand-heading" style="font-size: 24px;">Charade XP</div>
+    <div class="loading-bar">
+      <div class="loading-block"></div>
+    </div>
+  </div>
+
+  <!-- 3. Desktop Environment -->
+  <div id="desktop">
+    <div class="icon-grid">
+      <!-- Retail Shop Link -->
+      <a href="https://charade212.com/" class="desktop-icon" target="_blank">
+        <img src="chacha.png" alt="Charade Shop" />
+        <span>Charade Shop</span>
+      </a>
+
+      <!-- AIM Instant Messenger Desktop Icon -->
+      <div class="desktop-icon" onclick="openAIM()">
+        <img src="aimguy.png" alt="AIM Messenger" />
+        <span>AIM Chat</span>
+      </div>
+
+      <!-- System Error Trigger -->
+      <div class="desktop-icon" onclick="triggerError()">
+        <img src="WindowsDucky.png" alt="System Error" />
+        <span>System Error</span>
+      </div>
+    </div>
+
+    <!-- AIM Instant Messenger Pop-up Box -->
+    <div id="aim-modal">
+      <div class="aim-header" id="aim-drag-handle">
+        <span>Instant Message with: Charade212</span>
+        <div class="error-close" onclick="closeAIM()">X</div>
+      </div>
+      <div class="aim-body">
+        <div class="aim-chat-log" id="aim-chat-log"></div>
+        <div class="aim-toolbar">
+          <button><b>B</b></button>
+          <button><i>I</i></button>
+          <button><u>U</u></button>
+          <button style="color:red;">A</button>
+          <button>Warn</button>
+          <button>Block</button>
+        </div>
+        <div class="aim-input-area">
+          <textarea id="aim-msg-input" class="aim-input" placeholder="Type a message..."></textarea>
+          <button class="aim-send-btn" onclick="sendAIMMessage()">Send</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Error Pop-up Box -->
+    <div id="error-modal">
+      <div class="error-header">
+        <span>Charade System Error</span>
+        <div class="error-close" onclick="closeError()">X</div>
+      </div>
+      <div class="error-body">
+        <img src="charade error.gif" alt="Charade Error Cascade" class="error-cascade-img" />
+        <div class="error-msg">A fatal exception 0E has occurred at CHARADE212:ONLINE.</div>
+        <button class="error-btn" onclick="closeError()">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Audio Triggers (Standard XP & AIM Sounds) -->
+  <audio id="xp-startup" src="https://www.myinstants.com/media/sounds/windows-xp-startup.mp3" preload="auto"></audio>
+  <audio id="xp-error-sound" src="https://www.myinstants.com/media/sounds/windows-xp-error.mp3" preload="auto"></audio>
+  <audio id="aim-send-sound" src="https://www.myinstants.com/media/sounds/aim-send.mp3" preload="auto"></audio>
+  <audio id="aim-receive-sound" src="https://www.myinstants.com/media/sounds/imrcv.mp3" preload="auto"></audio>
+
+  <script>
+    // -----------------------------------------------------------------
+    // Supabase Configuration
+    // -----------------------------------------------------------------
+    const SUPABASE_URL = "https://rtxlxvzoenpykbrdwyfo.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0eGx4dnpvZW5weWticmR3eWZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc2MzAxNzAsImV4cCI6MjEwMzIwNjE3MH0.WxNdRg0W78RYQU0_I4p50I6OFvHEUc1gnSihZao4w6s";
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // Track loaded messages locally to stop duplicates
+    const loadedMsgIds = new Set();
+
+    // Realtime Listener for Incoming Admin Messages (Discord -> Supabase)
+    supabaseClient
+      .channel('aim-chat-channel')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, payload => {
+        const chatLog = document.getElementById('aim-chat-log');
+        const receiveSound = document.getElementById('aim-receive-sound');
+        const newMsg = payload.new;
+
+        if (newMsg.id && loadedMsgIds.has(newMsg.id)) return;
+        if (newMsg.id) loadedMsgIds.add(newMsg.id);
+
+        if (newMsg.is_admin) {
+          const msgDiv = document.createElement('div');
+          msgDiv.className = 'aim-chat-msg';
+          msgDiv.innerHTML = `<span class="sender">${newMsg.sender || 'Charade212'}:</span> ${newMsg.content}`;
+          chatLog.appendChild(msgDiv);
+          chatLog.scrollTop = chatLog.scrollHeight;
+
+          receiveSound.play().catch(e => console.log("Audio playback blocked:", e));
+        }
+      })
+      .subscribe();
+
+    // Boot Sequence & Dialog Controls
+    function startBootSequence(username) {
+      document.getElementById('user-screen').style.display = 'none';
+      document.getElementById('boot-screen').style.display = 'flex';
+      document.getElementById('xp-startup').play().catch(e => console.log(e));
+
+      setTimeout(() => {
+        document.getElementById('boot-screen').style.display = 'none';
+        document.getElementById('desktop').style.display = 'block';
+      }, 3000);
+    }
+
+    function triggerError() {
+      document.getElementById('xp-error-sound').play().catch(e => console.log(e));
+      document.getElementById('error-modal').style.display = 'block';
+    }
+
+    function closeError() {
+      document.getElementById('error-modal').style.display = 'none';
+    }
+
+    // Clean History Load (Sorted ascending by id/created_at)
+    async function loadHistory() {
       const chatLog = document.getElementById('aim-chat-log');
-      const receiveSound = document.getElementById('aim-receive-sound');
-      const newMsg = payload.new;
+      
+      chatLog.innerHTML = `<div class="aim-chat-msg"><span class="sender">Charade212:</span> Welcome! Drop a message below to send it live to my Discord.</div>`;
+      loadedMsgIds.clear();
 
-      // Only handle incoming admin (Discord) messages live to avoid duplicates
-      if (newMsg.is_admin) {
-        const msgDiv = document.createElement('div');
-        msgDiv.className = 'aim-chat-msg';
-        msgDiv.innerHTML = `<span class="sender">${newMsg.sender || 'Charade212'}:</span> ${newMsg.content}`;
-        chatLog.appendChild(msgDiv);
-        chatLog.scrollTop = chatLog.scrollHeight;
+      const { data, error } = await supabaseClient
+        .from('messages')
+        .select('*')
+        .order('id', { ascending: true })
+        .limit(50);
 
-        receiveSound.play().catch(e => console.log("Audio playback blocked:", e));
+      if (error) {
+        console.error("Error loading chat history:", error.message);
+        return;
       }
-    })
-    .subscribe();
 
-  // -----------------------------------------------------------------
-  // Boot Sequence & UI Handlers
-  // -----------------------------------------------------------------
-  function startBootSequence(username) {
-    const startupAudio = document.getElementById('xp-startup');
-    const userScreen = document.getElementById('user-screen');
-    const bootScreen = document.getElementById('boot-screen');
-    const desktop = document.getElementById('desktop');
-
-    userScreen.style.display = 'none';
-    bootScreen.style.display = 'flex';
-
-    startupAudio.play().catch(e => console.log("Audio playback blocked:", e));
-
-    setTimeout(() => {
-      bootScreen.style.display = 'none';
-      desktop.style.display = 'block';
-    }, 3000);
-  }
-
-  function triggerError() {
-    const errorAudio = document.getElementById('xp-error-sound');
-    const errorModal = document.getElementById('error-modal');
-    errorAudio.play().catch(e => console.log("Audio playback blocked:", e));
-    errorModal.style.display = 'block';
-  }
-
-  function closeError() {
-    document.getElementById('error-modal').style.display = 'none';
-  }
-
-  // Fetch past messages cleanly without duplicating
-  async function loadHistory() {
-    const chatLog = document.getElementById('aim-chat-log');
-    
-    // Reset window to welcome banner state before appending history
-    chatLog.innerHTML = `<div class="aim-chat-msg"><span class="sender">Charade212:</span> Welcome! Drop a message below to send it live to my Discord.</div>`;
-
-    const { data, error } = await supabaseClient
-      .from('messages')
-      .select('*')
-      .limit(50);
-
-    if (error) {
-      console.error("Supabase load history error:", error.message);
-      return;
+      if (data && data.length > 0) {
+        data.forEach(msg => {
+          if (msg.id) loadedMsgIds.add(msg.id);
+          const msgDiv = document.createElement('div');
+          msgDiv.className = 'aim-chat-msg';
+          if (msg.is_admin) {
+            msgDiv.innerHTML = `<span class="sender">${msg.sender || 'Charade212'}:</span> ${msg.content}`;
+          } else {
+            msgDiv.innerHTML = `<span class="me">${msg.sender || 'Guest'}:</span> ${msg.content}`;
+          }
+          chatLog.appendChild(msgDiv);
+        });
+        chatLog.scrollTop = chatLog.scrollHeight;
+      }
     }
 
-    if (data && data.length > 0) {
-      data.forEach(msg => {
-        const msgDiv = document.createElement('div');
-        msgDiv.className = 'aim-chat-msg';
-        if (msg.is_admin) {
-          msgDiv.innerHTML = `<span class="sender">${msg.sender || 'Charade212'}:</span> ${msg.content}`;
-        } else {
-          msgDiv.innerHTML = `<span class="me">${msg.sender || 'Guest'}:</span> ${msg.content}`;
-        }
-        chatLog.appendChild(msgDiv);
-      });
+    function openAIM() {
+      document.getElementById('aim-modal').style.display = 'block';
+      loadHistory();
+    }
+
+    function closeAIM() {
+      document.getElementById('aim-modal').style.display = 'none';
+    }
+
+    // Send AIM Message
+    async function sendAIMMessage() {
+      const input = document.getElementById('aim-msg-input');
+      const chatLog = document.getElementById('aim-chat-log');
+      const sendSound = document.getElementById('aim-send-sound');
+      const text = input.value.trim();
+
+      if (!text) return;
+
+      sendSound.play().catch(e => console.log("Audio playback blocked:", e));
+
+      const msgDiv = document.createElement('div');
+      msgDiv.className = 'aim-chat-msg';
+      msgDiv.innerHTML = `<span class="me">Guest:</span> ${text}`;
+      chatLog.appendChild(msgDiv);
       chatLog.scrollTop = chatLog.scrollHeight;
+
+      input.value = '';
+
+      const { data, error } = await supabaseClient
+        .from('messages')
+        .insert([{ sender: 'Guest', content: text, is_admin: false }])
+        .select();
+
+      if (data && data[0] && data[0].id) {
+        loadedMsgIds.add(data[0].id);
+      }
+
+      if (error) console.error("Supabase insert error:", error.message);
     }
-  }
 
-  function openAIM() {
-    document.getElementById('aim-modal').style.display = 'block';
-    loadHistory();
-  }
+    // Keydown Listener
+    document.addEventListener("DOMContentLoaded", () => {
+      const inputArea = document.getElementById('aim-msg-input');
+      if (inputArea) {
+        inputArea.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendAIMMessage();
+          }
+        });
+      }
+    });
 
-  function closeAIM() {
-    document.getElementById('aim-modal').style.display = 'none';
-  }
+    // Window Dragging Logic
+    const aimModal = document.getElementById("aim-modal");
+    const aimHeader = document.getElementById("aim-drag-handle");
+    let isDragging = false, offsetX = 0, offsetY = 0;
 
-  // -----------------------------------------------------------------
-  // AIM Message Sender (Inserts into Supabase)
-  // -----------------------------------------------------------------
-  async function sendAIMMessage() {
-    const input = document.getElementById('aim-msg-input');
-    const chatLog = document.getElementById('aim-chat-log');
-    const sendSound = document.getElementById('aim-send-sound');
-    const text = input.value.trim();
-
-    if (!text) return;
-
-    // Play send sound immediately
-    sendSound.play().catch(e => console.log("Audio playback blocked:", e));
-
-    // Render directly in UI immediately
-    const msgDiv = document.createElement('div');
-    msgDiv.className = 'aim-chat-msg';
-    msgDiv.innerHTML = `<span class="me">Guest:</span> ${text}`;
-    chatLog.appendChild(msgDiv);
-    chatLog.scrollTop = chatLog.scrollHeight;
-
-    input.value = '';
-
-    // Insert to Supabase table
-    const { error } = await supabaseClient
-      .from('messages')
-      .insert([{ sender: 'Guest', content: text, is_admin: false }]);
-
-    if (error) {
-      console.error("Failed to send message to Supabase:", error.message);
+    function handleStart(e) {
+      isDragging = true;
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      aimModal.style.transform = 'none';
+      offsetX = clientX - aimModal.offsetLeft;
+      offsetY = clientY - aimModal.offsetTop;
     }
-  }
 
-  // Keypress listener: Enter sends message, Shift+Enter creates line break
-  document.addEventListener("DOMContentLoaded", () => {
-    const inputArea = document.getElementById('aim-msg-input');
-    if (inputArea) {
-      inputArea.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
-          e.preventDefault();
-          sendAIMMessage();
-        }
-      });
+    function handleMove(e) {
+      if (!isDragging) return;
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      aimModal.style.left = `${clientX - offsetX}px`;
+      aimModal.style.top = `${clientY - offsetY}px`;
     }
-  });
 
-  // -----------------------------------------------------------------
-  // Drag Functionality (Mouse & Touch)
-  // -----------------------------------------------------------------
-  const aimModal = document.getElementById("aim-modal");
-  const aimHeader = document.getElementById("aim-drag-handle");
+    function handleEnd() { isDragging = false; }
 
-  let isDragging = false, offsetX = 0, offsetY = 0;
-
-  function handleStart(e) {
-    isDragging = true;
-    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-    
-    aimModal.style.transform = 'none';
-    offsetX = clientX - aimModal.offsetLeft;
-    offsetY = clientY - aimModal.offsetTop;
-  }
-
-  function handleMove(e) {
-    if (!isDragging) return;
-    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-
-    aimModal.style.left = `${clientX - offsetX}px`;
-    aimModal.style.top = `${clientY - offsetY}px`;
-  }
-
-  function handleEnd() {
-    isDragging = false;
-  }
-
-  aimHeader.addEventListener("mousedown", handleStart);
-  document.addEventListener("mousemove", handleMove);
-  document.addEventListener("mouseup", handleEnd);
-
-  aimHeader.addEventListener("touchstart", handleStart, { passive: true });
-  document.addEventListener("touchmove", handleMove, { passive: true });
-  document.addEventListener("touchend", handleEnd);
-</script>
+    aimHeader.addEventListener("mousedown", handleStart);
+    document.addEventListener("mousemove", handleMove);
+    document.addEventListener("mouseup", handleEnd);
+    aimHeader.addEventListener("touchstart", handleStart, { passive: true });
+    document.addEventListener("touchmove", handleMove, { passive: true });
+    document.addEventListener("touchend", handleEnd);
+  </script>
+</body>
+</html>
