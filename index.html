@@ -6,26 +6,47 @@
   <title>Charade XP</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body, html { width: 100%; height: 100%; font-family: "Tahoma", sans-serif; overflow: hidden; }
+    body, html { width: 100%; height: 100%; font-family: "Tahoma", sans-serif; overflow: hidden; user-select: none; }
 
-    /* Phase 1: White Landing Page */
-    #landing-screen {
+    /* Phase 1: Picka User Landing Screen */
+    #user-screen {
       position: absolute;
       width: 100%; height: 100%;
-      background-color: #ffffff;
+      background: linear-gradient(to bottom, #001275 0%, #2055d5 20%, #2055d5 80%, #001275 100%);
       display: flex;
       flex-direction: column;
-      justify-content: center;
-      align-items: center;
+      justify-content: space-between;
       z-index: 10;
     }
-    #duck-btn {
-      background: none; border: none; cursor: pointer; transition: transform 0.1s;
+    .welcome-top, .welcome-bottom {
+      height: 70px; background-color: #001248; width: 100%; display: flex; align-items: center; padding: 0 40px;
     }
-    #duck-btn:hover { transform: scale(1.05); }
+    .welcome-top { border-bottom: 2px solid #e58700; justify-content: flex-end; }
+    .welcome-bottom { border-top: 2px solid #e58700; justify-content: space-between; color: white; font-size: 13px; }
+    .welcome-center {
+      display: flex; width: 100%; height: calc(100% - 140px); align-items: center;
+    }
+    .welcome-left {
+      width: 45%; display: flex; flex-direction: column; align-items: flex-end; padding-right: 40px; border-right: 1px solid rgba(255,255,255,0.3);
+    }
+    .welcome-right {
+      width: 55%; padding-left: 40px; display: flex; flex-direction: column; gap: 20px;
+    }
+    .charade-flag-logo { width: 140px; margin-bottom: 10px; }
+    .brand-heading { color: white; font-size: 32px; font-weight: bold; font-family: "Trebuchet MS", sans-serif; text-shadow: 1px 1px 4px #000; }
+    .instruction-text { color: #ffffff; opacity: 0.8; font-size: 14px; margin-top: 8px; }
 
-    /* Phase 2: Windows XP Boot / Welcome Screen */
-    #welcome-screen {
+    .user-card {
+      display: flex; align-items: center; gap: 15px; cursor: pointer; padding: 8px; border-radius: 6px; width: 250px; transition: background 0.2s;
+    }
+    .user-card:hover { background: rgba(255, 255, 255, 0.15); }
+    .user-avatar {
+      width: 54px; height: 54px; border: 2px solid #fff; border-radius: 4px; box-shadow: 2px 2px 4px rgba(0,0,0,0.5); object-fit: cover;
+    }
+    .user-name { color: white; font-size: 18px; font-weight: bold; text-shadow: 1px 1px 2px #000; }
+
+    /* Phase 2: Windows Loading Screen */
+    #boot-screen {
       position: absolute;
       width: 100%; height: 100%;
       background: #000000;
@@ -36,18 +57,11 @@
       flex-direction: column;
       z-index: 9;
     }
-    .brand-title {
-      font-size: 28px;
-      font-weight: bold;
-      letter-spacing: 1px;
-      margin-bottom: 20px;
-      font-family: "Trebuchet MS", "Tahoma", sans-serif;
-    }
     .loading-bar {
-      width: 180px; height: 12px; border: 2px solid #5a5a5a; border-radius: 4px; overflow: hidden;
+      width: 160px; height: 12px; border: 2px solid #5a5a5a; border-radius: 3px; overflow: hidden; margin-top: 20px; background: #000;
     }
     .loading-block {
-      width: 30%; height: 100%; background-color: #2663e0; animation: loading 1.5s infinite linear;
+      width: 30%; height: 100%; background: linear-gradient(to right, #2860eb, #6ba1ff); animation: loading 1.4s infinite linear;
     }
     @keyframes loading {
       0% { transform: translateX(-100%); }
@@ -58,7 +72,7 @@
     #desktop {
       position: absolute;
       width: 100%; height: 100%;
-      background: url('assets/bliss.jpg') no-repeat center center fixed;
+      background: url('WindowsClassic.jpeg') no-repeat center center fixed;
       background-size: cover;
       display: none;
       z-index: 1;
@@ -67,61 +81,131 @@
       display: flex; flex-direction: column; gap: 20px; padding: 20px; width: 100px;
     }
     .desktop-icon {
-      display: flex; flex-direction: column; align-items: center; text-decoration: none; color: white; text-shadow: 1px 1px 2px #000; font-size: 12px;
+      display: flex; flex-direction: column; align-items: center; text-decoration: none; color: white; text-shadow: 1px 1px 3px #000; font-size: 12px; cursor: pointer; text-align: center;
     }
-    .desktop-icon img { width: 32px; height: 32px; margin-bottom: 4px; }
+    .desktop-icon img { width: 38px; height: 38px; margin-bottom: 4px; }
+
+    /* XP Error Dialog Styling */
+    #error-modal {
+      display: none;
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 360px;
+      background: #ece9d8;
+      border: 3px solid #0055ea;
+      border-radius: 8px 8px 0 0;
+      box-shadow: 4px 4px 12px rgba(0,0,0,0.5);
+      z-index: 100;
+    }
+    .error-header {
+      background: linear-gradient(to right, #0058ee, #3a93ff); color: white; font-weight: bold; padding: 4px 8px; font-size: 13px; display: flex; justify-content: space-between; align-items: center; border-radius: 4px 4px 0 0;
+    }
+    .error-close { background: #d84a38; border: 1px solid #fff; color: white; width: 16px; height: 16px; font-size: 10px; line-height: 12px; text-align: center; cursor: pointer; font-weight: bold; }
+    .error-body { padding: 15px; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+    .error-cascade-img { width: 220px; height: auto; }
+    .error-msg { font-size: 12px; color: #000; text-align: center; }
+    .error-btn { background: #ece9d8; border: 1px solid #7f9db9; padding: 4px 20px; font-size: 12px; cursor: pointer; box-shadow: inset 1px 1px 0 #fff; }
+    .error-btn:active { background: #e0ded0; }
   </style>
 </head>
 <body>
 
-  <!-- Landing Screen -->
-  <div id="landing-screen">
-    <button id="duck-btn" onclick="startBootSequence()">
-      <img src="images/WindowsDucky.png" alt="Duck Icon" width="128" />
-    </button>
+  <!-- 1. Pick a User Screen (Landing) -->
+  <div id="user-screen">
+    <div class="welcome-top"></div>
+    <div class="welcome-center">
+      <div class="welcome-left">
+        <img src="charadeflag.gif" alt="Charade Flag" class="charade-flag-logo" />
+        <div class="brand-heading">Charade XP</div>
+        <div class="instruction-text">To begin, click your user name</div>
+      </div>
+      <div class="welcome-right">
+        <div class="user-card" onclick="startBootSequence('Charade')">
+          <img src="WindowsDucky.png" alt="User Duck Icon" class="user-avatar" />
+          <span class="user-name">Charade</span>
+        </div>
+        <div class="user-card" onclick="startBootSequence('Guest')">
+          <div class="user-avatar" style="background:#5a84ea; display:flex; align-items:center; justify-content:center; color:white; font-weight:bold;">G</div>
+          <span class="user-name">Guest</span>
+        </div>
+      </div>
+    </div>
+    <div class="welcome-bottom">
+      <div>Turn off computer</div>
+      <div>Charade 212 Interactive Portal</div>
+    </div>
   </div>
 
-  <!-- Boot/Welcome Screen -->
-  <div id="welcome-screen">
-    <div class="brand-title">Charade XP</div>
+  <!-- 2. Booting / Loading Screen -->
+  <div id="boot-screen">
+    <img src="charadeflag.gif" alt="Charade Flag" style="width: 100px; margin-bottom: 15px;" />
+    <div class="brand-heading" style="font-size: 24px;">Charade XP</div>
     <div class="loading-bar">
       <div class="loading-block"></div>
     </div>
   </div>
 
-  <!-- Main Desktop -->
+  <!-- 3. Desktop Environment -->
   <div id="desktop">
     <div class="icon-grid">
       <a href="https://charade212.online" class="desktop-icon">
-        <img src="assets/folder-icon.png" alt="Folder" />
+        <img src="assets/folder-icon.png" alt="Folder" onerror="this.src='WindowsDucky.png'" />
         <span>Main Site</span>
       </a>
-      <a href="#" class="desktop-icon">
-        <img src="assets/media-icon.png" alt="Media" />
-        <span>Media Player</span>
-      </a>
+      <div class="desktop-icon" onclick="triggerError()">
+        <img src="assets/warning-icon.png" alt="System Error" onerror="this.src='WindowsDucky.png'" />
+        <span>System Error</span>
+      </div>
+    </div>
+
+    <!-- Error Pop-up Box -->
+    <div id="error-modal">
+      <div class="error-header">
+        <span>Charade System Error</span>
+        <div class="error-close" onclick="closeError()">X</div>
+      </div>
+      <div class="error-body">
+        <img src="charade error.gif" alt="Charade Error Cascade" class="error-cascade-img" />
+        <div class="error-msg">A fatal exception 0E has occurred at CHARADE212:ONLINE.</div>
+        <button class="error-btn" onclick="closeError()">OK</button>
+      </div>
     </div>
   </div>
 
-  <!-- Startup Sound -->
-  <audio id="xp-sound" src="assets/xp_startup.mp3" preload="auto"></audio>
+  <!-- Audio Triggers (Standard XP Sounds) -->
+  <audio id="xp-startup" src="https://www.myinstants.com/media/sounds/windows-xp-startup.mp3" preload="auto"></audio>
+  <audio id="xp-error-sound" src="https://www.myinstants.com/media/sounds/windows-xp-error.mp3" preload="auto"></audio>
 
   <script>
-    function startBootSequence() {
-      const audio = document.getElementById('xp-sound');
-      const landing = document.getElementById('landing-screen');
-      const welcome = document.getElementById('welcome-screen');
+    function startBootSequence(username) {
+      const startupAudio = document.getElementById('xp-startup');
+      const userScreen = document.getElementById('user-screen');
+      const bootScreen = document.getElementById('boot-screen');
       const desktop = document.getElementById('desktop');
 
-      landing.style.display = 'none';
-      welcome.style.display = 'flex';
+      userScreen.style.display = 'none';
+      bootScreen.style.display = 'flex';
 
-      audio.play().catch(e => console.log("Audio play blocked:", e));
+      // Play XP startup sound on interaction
+      startupAudio.play().catch(e => console.log("Audio playback blocked:", e));
 
+      // Transition to Bliss desktop after loading
       setTimeout(() => {
-        welcome.style.display = 'none';
+        bootScreen.style.display = 'none';
         desktop.style.display = 'block';
       }, 3000);
+    }
+
+    function triggerError() {
+      const errorAudio = document.getElementById('xp-error-sound');
+      const errorModal = document.getElementById('error-modal');
+      errorAudio.play().catch(e => console.log("Audio playback blocked:", e));
+      errorModal.style.display = 'block';
+    }
+
+    function closeError() {
+      document.getElementById('error-modal').style.display = 'none';
     }
   </script>
 </body>
