@@ -289,6 +289,21 @@
     let supabaseClient;
     const loadedMsgIds = new Set();
 
+    // Safe helper to play audio without letting missing or blocked sound files halt JavaScript execution
+    function safePlaySound(audioId) {
+      try {
+        const sound = document.getElementById(audioId);
+        if (sound) {
+          const promise = sound.play();
+          if (promise !== undefined) {
+            promise.catch(e => console.log(`Audio (${audioId}) skipped:`, e.message));
+          }
+        }
+      } catch (e) {
+        console.log(`Audio playback error ignored:`, e.message);
+      }
+    }
+
     function initSupabase() {
       if (window.supabase && typeof window.supabase.createClient === 'function') {
         supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -298,7 +313,6 @@
           .channel('aim-chat-channel')
           .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, payload => {
             const chatLog = document.getElementById('aim-chat-log');
-            const receiveSound = document.getElementById('aim-receive-sound');
             const newMsg = payload.new;
 
             if (newMsg.id && loadedMsgIds.has(newMsg.id)) return;
@@ -311,7 +325,7 @@
               chatLog.appendChild(msgDiv);
               chatLog.scrollTop = chatLog.scrollHeight;
 
-              receiveSound.play().catch(e => console.log("Audio playback blocked:", e));
+              safePlaySound('aim-receive-sound');
             }
           })
           .subscribe();
@@ -326,7 +340,7 @@
     function startBootSequence(username) {
       document.getElementById('user-screen').style.display = 'none';
       document.getElementById('boot-screen').style.display = 'flex';
-      document.getElementById('xp-startup').play().catch(e => console.log(e));
+      safePlaySound('xp-startup');
 
       setTimeout(() => {
         document.getElementById('boot-screen').style.display = 'none';
@@ -335,7 +349,7 @@
     }
 
     function triggerError() {
-      document.getElementById('xp-error-sound').play().catch(e => console.log(e));
+      safePlaySound('xp-error-sound');
       document.getElementById('error-modal').style.display = 'block';
     }
 
@@ -398,12 +412,11 @@
     async function sendAIMMessage() {
       const input = document.getElementById('aim-msg-input');
       const chatLog = document.getElementById('aim-chat-log');
-      const sendSound = document.getElementById('aim-send-sound');
       const text = input.value.trim();
 
       if (!text || !supabaseClient) return;
 
-      sendSound.play().catch(e => console.log("Audio playback blocked:", e));
+      safePlaySound('aim-send-sound');
 
       const msgDiv = document.createElement('div');
       msgDiv.className = 'aim-chat-msg';
