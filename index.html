@@ -286,12 +286,13 @@
     // Supabase Configuration
     // -----------------------------------------------------------------
     const SUPABASE_URL = "https://rtxlxvzoenpykbrdwyfo.supabase.co";
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0eGx4dnpvZW5weWticmR3eWZvIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NzYzMDE3MCwiZXhwIjoyMTAzMjA2MTcwfQ.zVhVujuJieDuUp27MtsBUbFRvzx4r4U8wNDjeWlGGMY";
+    // Replace with your public 'anon' key from API settings (NOT service_role key)
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0eGx4dnpvZW5weWticmR3eWZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc2MzAxNzAsImV4cCI6MjEwMzIwNjE3MH0.WxNdRg0W78RYQU0_I4p50I6OFvHEUc1gnSihZao4w6s";
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     // Listen live for incoming replies sent from Discord -> Supabase
     supabaseClient
-      .channel('public:messages')
+      .channel('aim-chat-channel')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, payload => {
         const chatLog = document.getElementById('aim-chat-log');
         const receiveSound = document.getElementById('aim-receive-sound');
@@ -308,7 +309,9 @@
           receiveSound.play().catch(e => console.log("Audio playback blocked:", e));
         }
       })
-      .subscribe();
+      .subscribe(status => {
+        console.log("Realtime subscription status:", status);
+      });
 
     // -----------------------------------------------------------------
     // Boot Sequence & UI Handlers
@@ -373,9 +376,11 @@
 
       // Send to Supabase (Supabase Webhook notifies Discord)
       try {
-        await supabaseClient
+        const { error } = await supabaseClient
           .from('messages')
           .insert([{ sender: 'Guest', content: text, is_admin: false }]);
+          
+        if (error) console.error("Supabase insert error:", error.message);
       } catch (err) {
         console.error("Failed to send message to Supabase:", err);
       }
