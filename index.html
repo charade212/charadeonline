@@ -222,7 +222,7 @@
 
       <!-- AIM Instant Messenger Desktop Icon -->
       <div class="desktop-icon" onclick="openAIM()">
-        <img src="lilolme1.png" alt="AIM Messenger" />
+        <img src="aimguy.png" alt="AIM Messenger" />
         <span>AIM Chat</span>
       </div>
 
@@ -309,7 +309,7 @@
     }
 
     // AIM Window Handlers & Discord Integration
-    const DISCORD_WEBHOOK_URL = "YOUR_DISCORD_WEBHOOK_URL_HERE";
+    const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1541678739203555438/IX1ZXF1offy0qWDxp9eYD1ZpxaHFcaNcahUiOLvgze-xh8vnymTrs5KPw1dHisgTwuiD";
 
     function openAIM() {
       document.getElementById('aim-modal').style.display = 'block';
@@ -337,13 +337,13 @@
 
       input.value = '';
 
-      if (DISCORD_WEBHOOK_URL && DISCORD_WEBHOOK_URL !== "YOUR_DISCORD_WEBHOOK_URL_HERE") {
+      if (DISCORD_WEBHOOK_URL) {
         try {
           await fetch(DISCORD_WEBHOOK_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              username: 'AIM Guest',
+              username: 'AIM Guestbook',
               avatar_url: 'https://amberdiaz.com/lilolme2.png',
               content: text
             })
@@ -365,7 +365,6 @@
       const clientX = e.touches ? e.touches[0].clientX : e.clientX;
       const clientY = e.touches ? e.touches[0].clientY : e.clientY;
       
-      // Clear transform centering when dragged for precise positioning
       aimModal.style.transform = 'none';
       offsetX = clientX - aimModal.offsetLeft;
       offsetY = clientY - aimModal.offsetTop;
