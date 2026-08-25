@@ -11,6 +11,9 @@
   <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
   <link rel="manifest" href="/site.webmanifest">
 
+  <!-- Supabase JS Library -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body, html { width: 100%; height: 100%; font-family: "Tahoma", sans-serif; overflow: hidden; user-select: none; }
@@ -241,7 +244,7 @@
       </div>
       <div class="aim-body">
         <div class="aim-chat-log" id="aim-chat-log">
-          <div class="aim-chat-msg"><span class="sender">Charade212:</span> Welcome! Drop a message below to send it to my Discord.</div>
+          <div class="aim-chat-msg"><span class="sender">Charade212:</span> Welcome! Drop a message below to send it live to my Discord.</div>
         </div>
         <div class="aim-toolbar">
           <button><b>B</b></button>
@@ -272,13 +275,44 @@
     </div>
   </div>
 
-  <!-- Audio Triggers (Standard XP Sounds) -->
+  <!-- Audio Triggers (Standard XP & AIM Sounds) -->
   <audio id="xp-startup" src="https://www.myinstants.com/media/sounds/windows-xp-startup.mp3" preload="auto"></audio>
   <audio id="xp-error-sound" src="https://www.myinstants.com/media/sounds/windows-xp-error.mp3" preload="auto"></audio>
   <audio id="aim-send-sound" src="https://www.myinstants.com/media/sounds/aim-send.mp3" preload="auto"></audio>
+  <audio id="aim-receive-sound" src="https://www.myinstants.com/media/sounds/imrcv.mp3" preload="auto"></audio>
 
   <script>
-    // Boot sequence controller
+    // -----------------------------------------------------------------
+    // Supabase Configuration
+    // -----------------------------------------------------------------
+    const SUPABASE_URL = "https://rtxlxvzoenpykbrdwyfo.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0eGx4dnpvZW5weWticmR3eWZvIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NzYzMDE3MCwiZXhwIjoyMTAzMjA2MTcwfQ.zVhVujuJieDuUp27MtsBUbFRvzx4r4U8wNDjeWlGGMY";
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // Listen live for incoming replies sent from Discord -> Supabase
+    supabaseClient
+      .channel('public:messages')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, payload => {
+        const chatLog = document.getElementById('aim-chat-log');
+        const receiveSound = document.getElementById('aim-receive-sound');
+        const newMsg = payload.new;
+
+        // Display messages typed from Discord (is_admin = true)
+        if (newMsg.is_admin) {
+          const msgDiv = document.createElement('div');
+          msgDiv.className = 'aim-chat-msg';
+          msgDiv.innerHTML = `<span class="sender">${newMsg.sender}:</span> ${newMsg.content}`;
+          chatLog.appendChild(msgDiv);
+          chatLog.scrollTop = chatLog.scrollHeight;
+
+          receiveSound.play().catch(e => console.log("Audio playback blocked:", e));
+        }
+      })
+      .subscribe();
+
+    // -----------------------------------------------------------------
+    // Boot Sequence & UI Handlers
+    // -----------------------------------------------------------------
     function startBootSequence(username) {
       const startupAudio = document.getElementById('xp-startup');
       const userScreen = document.getElementById('user-screen');
@@ -296,7 +330,6 @@
       }, 3000);
     }
 
-    // Error window handlers
     function triggerError() {
       const errorAudio = document.getElementById('xp-error-sound');
       const errorModal = document.getElementById('error-modal');
@@ -308,9 +341,6 @@
       document.getElementById('error-modal').style.display = 'none';
     }
 
-    // AIM Window Handlers & Discord Integration
-    const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1541678739203555438/IX1ZXF1offy0qWDxp9eYD1ZpxaHFcaNcahUiOLvgze-xh8vnymTrs5KPw1dHisgTwuiD";
-
     function openAIM() {
       document.getElementById('aim-modal').style.display = 'block';
     }
@@ -319,6 +349,9 @@
       document.getElementById('aim-modal').style.display = 'none';
     }
 
+    // -----------------------------------------------------------------
+    // AIM Message Sender (Inserts into Supabase)
+    // -----------------------------------------------------------------
     async function sendAIMMessage() {
       const input = document.getElementById('aim-msg-input');
       const chatLog = document.getElementById('aim-chat-log');
@@ -329,6 +362,7 @@
 
       sendSound.play().catch(e => console.log("Audio playback blocked:", e));
 
+      // Append locally to chat box UI
       const msgDiv = document.createElement('div');
       msgDiv.className = 'aim-chat-msg';
       msgDiv.innerHTML = `<span class="me">Guest:</span> ${text}`;
@@ -337,24 +371,19 @@
 
       input.value = '';
 
-      if (DISCORD_WEBHOOK_URL) {
-        try {
-          await fetch(DISCORD_WEBHOOK_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              username: 'AIM Guestbook',
-              avatar_url: 'https://amberdiaz.com/lilolme2.png',
-              content: text
-            })
-          });
-        } catch (err) {
-          console.error("Failed to route message to Discord:", err);
-        }
+      // Send to Supabase (Supabase Webhook notifies Discord)
+      try {
+        await supabaseClient
+          .from('messages')
+          .insert([{ sender: 'Guest', content: text, is_admin: false }]);
+      } catch (err) {
+        console.error("Failed to send message to Supabase:", err);
       }
     }
 
-    // Drag functionality supporting both Mouse and Touch events
+    // -----------------------------------------------------------------
+    // Drag Functionality (Mouse & Touch)
+    // -----------------------------------------------------------------
     const aimModal = document.getElementById("aim-modal");
     const aimHeader = document.getElementById("aim-drag-handle");
 
