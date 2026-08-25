@@ -1,167 +1,275 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>charade212</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Windows XP Experience</title>
   <style>
-    body, html {
+    * {
+      box-sizing: border-box;
       margin: 0;
       padding: 0;
-      background: #ffffff; /* Clean white */
+    }
+    body, html {
+      width: 100%;
+      height: 100%;
+      font-family: "Tahoma", "Segoe UI", sans-serif;
       overflow: hidden;
-      font-family: Arial, sans-serif;
-      color: black;
+      background-color: #000;
     }
 
-    canvas {
-      display: block;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-    }
-
-    #logo {
+    /* Screen 1: Duck Landing Page */
+    #landing-screen {
       position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
+      inset: 0;
+      background-color: #ffffff;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 30;
+    }
+    #duck-img {
+      max-width: 250px;
+      max-height: 250px;
+      margin-bottom: 24px;
       cursor: pointer;
-      z-index: 2;
+    }
+    .xp-btn {
+      padding: 8px 20px;
+      background: linear-gradient(180deg, #ece9d8 0%, #d6d3ce 100%);
+      border: 2px solid #003c74;
+      border-radius: 3px;
+      font-weight: bold;
+      color: #000;
+      cursor: pointer;
+      box-shadow: inset 1px 1px 0px #fff;
+    }
+    .xp-btn:active {
+      background: #c0c0c0;
     }
 
-    #shop {
+    /* Screen 2: XP Welcome / Loading Screen */
+    #loading-screen {
+      position: absolute;
+      inset: 0;
+      background: #000000;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 20;
       opacity: 0;
       pointer-events: none;
-      max-width: 600px;
-      margin: 100px auto;
-      padding: 20px;
-      position: relative;
-      z-index: 3;
+      transition: opacity 0.5s ease;
     }
-
-    .product {
-      margin-bottom: 40px;
+    .xp-logo-container {
       text-align: center;
+      color: #ffffff;
+      margin-bottom: 30px;
+    }
+    .xp-logo-text {
+      font-size: 36px;
+      font-weight: bold;
+      font-style: italic;
+      letter-spacing: 1px;
+    }
+    .xp-logo-sub {
+      color: #ff6000;
+      font-weight: bold;
+      font-style: italic;
+      font-size: 18px;
+      display: inline-block;
+      margin-left: 5px;
+    }
+    .loader-bar {
+      width: 180px;
+      height: 14px;
+      border: 2px solid #b2b2b2;
+      border-radius: 4px;
+      padding: 1px;
+      display: flex;
+      overflow: hidden;
+      background-color: #000;
+    }
+    .loader-block {
+      width: 10px;
+      height: 100%;
+      background: linear-gradient(180deg, #2880e6 0%, #004cb3 100%);
+      margin-right: 2px;
+      border-radius: 1px;
+      animation: moveBlock 1.5s infinite linear;
+    }
+    @keyframes moveBlock {
+      0% { transform: translateX(-30px); }
+      100% { transform: translateX(190px); }
     }
 
-    .product img {
-      width: 300px;
-      height: auto;
+    /* Screen 3: Main Desktop */
+    #desktop-screen {
+      position: absolute;
+      inset: 0;
+      background: url('https://upload.wikimedia.org/wikipedia/en/2/27/Bliss_%28Windows_XP%29.png') no-repeat center center fixed;
+      background-size: cover;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
     }
 
-    button {
-      background: black;
-      color: white;
+    /* Desktop Icons */
+    .icon-grid {
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      align-items: flex-start;
+    }
+    .desktop-icon {
+      width: 80px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-decoration: none;
+      cursor: pointer;
+      padding: 5px;
+      border: 1px solid transparent;
+    }
+    .desktop-icon:hover {
+      background-color: rgba(49, 106, 197, 0.3);
+      border: 1px solid rgba(49, 106, 197, 0.5);
+      border-radius: 3px;
+    }
+    .desktop-icon img {
+      width: 48px;
+      height: 48px;
+      margin-bottom: 4px;
+    }
+    .desktop-icon span {
+      color: #ffffff;
+      font-size: 11px;
+      text-align: center;
+      text-shadow: 1px 1px 1px #000000;
+      word-break: break-word;
+    }
+
+    /* Taskbar */
+    .taskbar {
+      height: 30px;
+      background: linear-gradient(180deg, #245edb 0%, #1941a5 8%, #1952e4 92%, #143b99 100%);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .start-btn {
+      height: 100%;
+      padding: 0 15px;
+      background: linear-gradient(180deg, #388838 0%, #216921 100%);
       border: none;
-      padding: 10px 30px;
-      font-family: Arial, sans-serif;
+      border-top-right-radius: 8px;
+      border-bottom-right-radius: 8px;
+      color: white;
+      font-weight: bold;
+      font-style: italic;
       font-size: 14px;
       cursor: pointer;
-      transition: background 0.3s ease;
-      margin-top: 15px;
+      box-shadow: inset 1px 1px 0px #6cb76c;
+      display: flex;
+      align-items: center;
     }
-
-    button:hover {
-      background: #555;
+    .system-tray {
+      height: 100%;
+      padding: 0 10px;
+      background: linear-gradient(180deg, #0c8fea 0%, #0964c6 100%);
+      border-left: 1px solid #10439b;
+      color: white;
+      font-size: 11px;
+      display: flex;
+      align-items: center;
     }
   </style>
 </head>
-
 <body>
-  <audio id="warpSound" src="/sounds/warp.mp3"></audio>
 
-  <canvas id="stars"></canvas>
-  <img id="logo" src="/images/logo.png" alt="Logo" width="120">
+  <!-- Screen 1: Landing Page -->
+  <div id="landing-screen">
+    <img id="duck-img" src="green_body.jpg" alt="Windows XP Duck" />
+    <button class="xp-btn" onclick="startExperience()">Start</button>
+  </div>
 
-  <div id="shop">
-    <div class="product">
-      <img src="/products/cha-cha-trucker.jpg" alt="Cha Cha Trucker Hat">
-      <h2>Cha Cha Trucker Hat</h2>
-      <p>$20</p>
-      <a href="https://buy.stripe.com/9AQ01n7hP7wZgmsfYY" target="_blank">
-        <button>Buy Now</button>
-      </a>
+  <!-- Screen 2: XP Loading Screen -->
+  <div id="loading-screen">
+    <div class="xp-logo-container">
+      <span class="xp-logo-text">Microsoft</span>
+      <div style="font-size: 28px; font-weight: bold;">Windows<span class="xp-logo-sub">XP</span></div>
+    </div>
+    <div class="loader-bar">
+      <div class="loader-block"></div>
+      <div class="loader-block"></div>
+      <div class="loader-block"></div>
     </div>
   </div>
 
-<script>
-// Star tunnel effect
-const canvas = document.getElementById('stars');
-const ctx = canvas.getContext('2d');
-let stars = [];
-let w, h;
+  <!-- Screen 3: Desktop Screen -->
+  <div id="desktop-screen">
+    <div class="icon-grid">
+      <a href="https://charade212.online" class="desktop-icon" target="_blank">
+        <img src="screen_normal.jpg" alt="Media Player" />
+        <span>Main Site</span>
+      </a>
+      <a href="https://charade212.online" class="desktop-icon" target="_blank">
+        <img src="Plasma Ball.wms" alt="Media Player Skin" />
+        <span>Media Player</span>
+      </a>
+    </div>
 
-function resizeCanvas() {
-  w = canvas.width = window.innerWidth;
-  h = canvas.height = window.innerHeight;
-}
+    <!-- XP Taskbar -->
+    <div class="taskbar">
+      <button class="start-btn">start</button>
+      <div class="system-tray" id="clock">12:00 PM</div>
+    </div>
+  </div>
 
-window.addEventListener('resize', resizeCanvas);
-resizeCanvas();
+  <!-- Audio Element -->
+  <audio id="xp-sound" src="https://www.winhistory.de/more/winstart/mp3/winxp.mp3" preload="auto"></audio>
 
-function createStars(count) {
-  stars = [];
-  for (let i = 0; i < count; i++) {
-    stars.push({
-      x: Math.random() * w - w/2,
-      y: Math.random() * h - h/2,
-      z: Math.random() * w
-    });
-  }
-}
+  <script>
+    function startExperience() {
+      const audio = document.getElementById('xp-sound');
+      const landing = document.getElementById('landing-screen');
+      const loading = document.getElementById('loading-screen');
 
-function drawStars() {
-  ctx.fillStyle = 'black';
-  ctx.fillRect(0, 0, w, h);
-  ctx.fillStyle = 'white';
-  stars.forEach(star => {
-    let k = 128.0 / star.z;
-    let x = star.x * k + w/2;
-    let y = star.y * k + h/2;
-    if (x >= 0 && x <= w && y >= 0 && y <= h) {
-      let size = (1 - star.z / w) * 2;
-      ctx.beginPath();
-      ctx.arc(x, y, size, 0, 2 * Math.PI);
-      ctx.fill();
+      // Play audio prompt
+      audio.play().catch(() => {
+        console.log("Audio playback required interaction.");
+      });
+
+      // Hide Landing, Show Loading
+      landing.style.display = 'none';
+      loading.style.opacity = '1';
+      loading.style.pointerEvents = 'auto';
+
+      // Transition to Desktop after 3.5 seconds
+      setTimeout(() => {
+        loading.style.opacity = '0';
+        loading.style.pointerEvents = 'none';
+        setTimeout(() => {
+          loading.style.display = 'none';
+        }, 500);
+      }, 3500);
     }
-  });
-}
 
-function moveStars() {
-  stars.forEach(star => {
-    star.z -= 3;
-    if (star.z <= 0) {
-      star.z = w;
+    // Taskbar Clock functionality
+    function updateClock() {
+      const now = new Date();
+      let hours = now.getHours();
+      const minutes = now.getMinutes().toString().padStart(2, '0');
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      hours = hours % 12 || 12;
+      document.getElementById('clock').textContent = `${hours}:${minutes} ${ampm}`;
     }
-  });
-}
-
-function animate() {
-  drawStars();
-  moveStars();
-  requestAnimationFrame(animate);
-}
-
-createStars(400);
-animate();
-
-// Logo click triggers shop
-const logo = document.getElementById('logo');
-const shop = document.getElementById('shop');
-const warpSound = document.getElementById('warpSound');
-
-logo.addEventListener('click', () => {
-  warpSound.play();
-  logo.style.display = 'none';
-  setTimeout(() => {
-    shop.style.opacity = 1;
-    shop.style.pointerEvents = 'auto';
-    canvas.style.display = 'none';
-  }, 3000);
-});
-</script>
-
+    setInterval(updateClock, 1000);
+    updateClock();
+  </script>
 </body>
 </html>
