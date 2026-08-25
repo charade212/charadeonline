@@ -37,14 +37,15 @@
       width: 45%; display: flex; flex-direction: column; align-items: flex-end; padding-right: 40px; border-right: 1px solid rgba(255,255,255,0.3);
     }
     .welcome-right {
-      width: 55%; padding-left: 40px; display: flex; flex-direction: column; gap: 20px;
+      width: 55%; padding-left: 40px; display: flex; flex-direction: column; gap: 15px;
     }
     .charade-flag-logo { width: 140px; margin-bottom: 10px; }
     .brand-heading { color: white; font-size: 32px; font-weight: bold; font-family: "Trebuchet MS", sans-serif; text-shadow: 1px 1px 4px #000; }
     .instruction-text { color: #ffffff; opacity: 0.8; font-size: 14px; margin-top: 8px; }
 
+    .user-card-link { text-decoration: none; display: block; width: fit-content; }
     .user-card {
-      display: flex; align-items: center; gap: 15px; cursor: pointer; padding: 8px; border-radius: 6px; width: 250px; transition: background 0.2s;
+      display: flex; align-items: center; gap: 15px; cursor: pointer; padding: 8px; border-radius: 6px; width: 260px; transition: background 0.2s;
     }
     .user-card:hover { background: rgba(255, 255, 255, 0.15); }
     .user-avatar {
@@ -128,14 +129,27 @@
         <div class="instruction-text">To begin, click your user name</div>
       </div>
       <div class="welcome-right">
+        <!-- Main Charade User -->
         <div class="user-card" onclick="startBootSequence('Charade')">
           <img src="WindowsDucky.jpg" alt="User Duck Icon" class="user-avatar" />
           <span class="user-name">Charade</span>
         </div>
-        <div class="user-card" onclick="startBootSequence('Guest')">
-          <div class="user-avatar" style="background:#5a84ea; display:flex; align-items:center; justify-content:center; color:white; font-weight:bold;">G</div>
-          <span class="user-name">Guest</span>
-        </div>
+
+        <!-- Amber Diaz User -->
+        <a href="https://amberdiaz.com/" class="user-card-link" target="_blank">
+          <div class="user-card">
+            <img src="lilolme2.png" alt="Amber Diaz Icon" class="user-avatar" />
+            <span class="user-name">Amber Diaz</span>
+          </div>
+        </a>
+
+        <!-- Amber Skyy User -->
+        <a href="https://amberskyy.online/" class="user-card-link" target="_blank">
+          <div class="user-card">
+            <img src="lilolme1.png" alt="Amber Skyy Icon" class="user-avatar" />
+            <span class="user-name">Amber Skyy</span>
+          </div>
+        </a>
       </div>
     </div>
     <div class="welcome-bottom">
