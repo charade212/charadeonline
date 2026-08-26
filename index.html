@@ -431,6 +431,7 @@
 
       input.value = '';
 
+      // 1. Save to Supabase
       const { data, error } = await supabaseClient
         .from('messages')
         .insert([{ sender: 'Guest', content: text, is_admin: false }])
@@ -441,6 +442,20 @@
         console.error("Insert error:", error);
       } else if (data && data[0] && data[0].id) {
         loadedMsgIds.add(data[0].id);
+      }
+
+      // 2. Fire the Make Webhook to instantly post to Discord
+      try {
+        await fetch('YOUR_MAKE_WEBHOOK_URL_HERE', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            content: text,
+            username: 'Guest'
+          })
+        });
+      } catch (err) {
+        console.error("Webhook trigger failed:", err);
       }
     }
 
