@@ -216,7 +216,7 @@
     <div class="icon-grid">
       <!-- Retail Shop Link -->
       <a href="https://charade212.com/" class="desktop-icon" target="_blank">
-        <img src="chacha.png" alt="Charade Shop" />
+        <img src="charadebag.png" alt="Charade Shop" />
         <span>Charade Shop</span>
       </a>
 
@@ -248,7 +248,7 @@
       <div style="padding: 10px; background: #fff; border: 2px inset #7f9db9; height: 180px; overflow-y: auto; font-family: 'Courier New', monospace; font-size: 11px; color: #000;">
         <strong>[SYS_LOG: CHACHA_PROFILE]</strong><br><br>
         - <strong>Alias:</strong> Cha Cha / The Operator<br>
-        - <strong>Status:</strong> Active / Standalone DeepSeek-Powered Node.<br>
+        - <strong>Status:</strong> Active / Free Local Node.<br>
         - <strong>Origin:</strong> Operating out of the hidden layers of the Charade portal. Rumored to intercept forgotten packets and trade in high-frequency static.<br><br>
         <em>"If the chat log starts printing backwards, close the window."</em>
       </div>
@@ -345,7 +345,7 @@
       const chatLog = document.getElementById('aim-chat-log');
       const inputArea = document.getElementById('aim-msg-input');
       
-      chatLog.innerHTML = `<div class="aim-chat-msg"><span class="sender">Cha Cha:</span> Sup. Connected directly to you. What's on your mind?</div>`;
+      chatLog.innerHTML = `<div class="aim-chat-msg"><span class="sender">Cha Cha:</span> Sup. Running on local static now—totally free, zero API drain. What's up?</div>`;
       
       if (inputArea) inputArea.value = '';
     }
@@ -361,11 +361,9 @@
     }
 
     // -----------------------------------------------------------------
-    // DeepSeek API Integration
+    // Free Local Chat Response Logic
     // -----------------------------------------------------------------
-    const DEEPSEEK_API_KEY = "sk-ea1dc7b862024507887a998e3e58db3d";
-
-    async function sendAIMMessage() {
+    function sendAIMMessage() {
       const input = document.getElementById('aim-msg-input');
       const chatLog = document.getElementById('aim-chat-log');
       const text = input.value.trim();
@@ -383,48 +381,25 @@
 
       input.value = '';
 
-      // Create placeholder for DeepSeek response
-      const replyDiv = document.createElement('div');
-      replyDiv.className = 'aim-chat-msg';
-      replyDiv.innerHTML = `<span class="sender">Cha Cha:</span> <span style="color: #666; font-style: italic;">typing...</span>`;
-      chatLog.appendChild(replyDiv);
-      chatLog.scrollTop = chatLog.scrollHeight;
+      // Array of clever local fallback replies
+      const localReplies = [
+        "Packet received in the buffer. Static is clean.",
+        "That's cyberspace for you.",
+        "Running smoothly on local backup power.",
+        "Noted. Saving that to the virtual floppy disk.",
+        "The mainframe acknowledges your transmission."
+      ];
+      const randomReply = localReplies[Math.floor(Math.random() * localReplies.length)];
 
-      try {
-        const response = await fetch("https://api.deepseek.com/chat/completions", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${DEEPSEEK_API_KEY}`
-          },
-          body: JSON.stringify({
-            model: "deepseek-chat",
-            messages: [
-              { 
-                role: "system", 
-                content: "You are Cha Cha, an operator running inside a nostalgic Windows XP web portal environment. Keep your responses punchy, atmospheric, and conversational." 
-              },
-              { role: "user", content: text }
-            ],
-            stream: false
-          })
-        });
-
-        if (!response.ok) {
-          throw new Error(`API error: ${response.status}`);
-        }
-
-        const data = await response.json();
-        const aiReply = data.choices[0].message.content;
-
-        replyDiv.innerHTML = `<span class="sender">Cha Cha:</span> ${aiReply}`;
+      // Simulated quick local response
+      setTimeout(() => {
+        const replyDiv = document.createElement('div');
+        replyDiv.className = 'aim-chat-msg';
+        replyDiv.innerHTML = `<span class="sender">Cha Cha:</span> ${randomReply}`;
+        chatLog.appendChild(replyDiv);
+        chatLog.scrollTop = chatLog.scrollHeight;
         playAudioSafe('aim-receive-sound');
-      } catch (err) {
-        console.error("DeepSeek connection error:", err);
-        replyDiv.innerHTML = `<span class="sender">Cha Cha:</span> <span style="color: red;">[Connection error: Failed to reach DeepSeek mainframe.]</span>`;
-      }
-
-      chatLog.scrollTop = chatLog.scrollHeight;
+      }, 600);
     }
 
     // Keypress listener & initialization on load
